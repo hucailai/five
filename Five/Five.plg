@@ -1,0 +1,30 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: Five - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSPFD.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Debug/" /Fp"Debug/Five.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"F:\test\wg\Five\ChessAI.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSPFD.tmp" 
+Creating command line "link.exe /nologo /subsystem:windows /incremental:yes /pdb:"Debug/Five.pdb" /debug /machine:I386 /out:"Debug/Five.exe" /pdbtype:sept  .\Debug\ChessAI.obj .\Debug\Five.obj .\Debug\FiveDlg.obj .\Debug\StdAfx.obj .\Debug\Five.res "
+<h3>Output Window</h3>
+Compiling...
+ChessAI.cpp
+Linking...
+Creating command line "bscmake.exe /nologo /o"Debug/Five.bsc"  .\Debug\StdAfx.sbr .\Debug\ChessAI.sbr .\Debug\Five.sbr .\Debug\FiveDlg.sbr"
+Creating browse info file...
+<h3>Output Window</h3>
+
+
+
+<h3>Results</h3>
+Five.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
