@@ -357,7 +357,7 @@ void CFiveDlg::OnStart()
 
 
 	i64Score = 0;
-	pt = AI(array, BLACK_CHESS, 1, &i64Score);
+	pt = AI(array, BLACK_CHESS, 5, &i64Score);
 
 	CString str2;
 	str2.Format("AI Cnt=%d\n", uiAiCnt);
@@ -379,8 +379,30 @@ void CFiveDlg::OnStart()
 
 
 
+
 void CFiveDlg::OnBnClickedButton1()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	//ClickChess(0,0);
+	FiveCellMapInit();
+
+
+	char c1,c2,c3,c4,c5;
+	int tmp;
+	CString str;
+	for (int i = 0 ; i < FIVECELL_MAX; i++)
+	{
+		tmp = i;
+		c1 = tmp % 3 + '0';
+		tmp = tmp/3;
+		c2 = tmp % 3 + '0';
+		tmp = tmp/3;
+		c3 = tmp % 3 + '0';
+		tmp = tmp/3;
+		c4 = tmp % 3 + '0';
+		tmp = tmp/3;
+		c5 = tmp % 3 + '0';
+		str.Format("%c%c%c%c%c=%d\n",c5,c4,c3,c2,c1, g_FiveCellMap[i]);
+		OutputDebugString(str);
+	}
 }

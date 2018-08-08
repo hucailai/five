@@ -31,7 +31,7 @@ using namespace std;
 #define FIVE_SCORE		F_INFINITE		 // 五子得分
 #define FOUR_SCORE		100000			 // 四子得分
 #define THREE_SCORE     1000			 // 三子得分
-#define TWO_SCORE		10			     // 两子得分
+#define TWO_SCORE		100			     // 两子得分
 #define ONE_SCORE		1				 // 单子得分
 
 #define S_THREE_SCORE   10				 // 单三得分
@@ -39,7 +39,13 @@ using namespace std;
 
 #define MAX_LEVEL 20  // 最大搜索深度
 
+
+#define FIVECELL_MAX	 3*3*3*3*3
+#define TENCELL_MAX		 3*3*3*3*3*3*3*3*3*3
+
+
 extern LARGE_INTEGER g_tc;
+extern INT64 g_FiveCellMap[FIVECELL_MAX];
 
 
 #define GET_NS(b,e)  (((e.QuadPart)-(b.QuadPart))*1000*1000*1000)/(g_tc.QuadPart)
@@ -60,7 +66,7 @@ enum DIRECTION
 
 
 POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiAIColor, UINT32 uiLevel, INT64 *score);
-
+void FiveCellMapInit();
 
 class CChessAI  
 {

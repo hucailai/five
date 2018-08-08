@@ -896,7 +896,7 @@ UINT32 g_uiLeafCnt = 0;
 /* 黑棋得分-白棋得分 */
 inline INT64 Evaluate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor)  // 53300ns
 {
-	//g_uiLeafCnt++;
+	g_uiLeafCnt++;
 	//return 0;
 	UINT64 ui64BlackEvaluate = 0;
 	UINT64 ui64WhiteEvaluate = 0;
@@ -1091,4 +1091,255 @@ POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 ui
 
 	return stMaxPnt;
 }
+
+
+
+INT64 g_FiveCellMap[FIVECELL_MAX]={0};
+INT64 g_TenCellMap[TENCELL_MAX]={0};
+
+// 计算5个子的得分, a[]是一个5个元素的数组
+INT64 GenFiveCellScore(int a[])
+{
+	int blackCnt = 0;
+	int whiteCnt = 0;
+	int base = 0;
+
+	for (int i = 0; i < 5; i++)
+	{
+		if (a[i] == BLACK_CHESS)
+		{
+			blackCnt++;	
+		}
+		else if (a[i] == WHITE_CHESS)
+		{
+			whiteCnt++;
+		}
+	}
+
+	// 全0得分为0
+	if (a[0] == 0 && a[1] == 0 && a[2] == 0 && a[3] == 0 && a[4] == 0)
+	{
+		return 0;
+	}
+	
+	// 黑白混在一起得0分
+	if (blackCnt > 0 && whiteCnt > 0)
+	{
+		return 0;
+	}
+
+	// 只有一个黑
+	if (blackCnt == 1)
+	{
+		if (a[0] == BLACK_CHESS)
+		{
+			return (ONE_SCORE);
+		}
+		else if (a[1] == BLACK_CHESS)
+		{
+			return (ONE_SCORE + 1);
+		}
+		else if (a[2] == BLACK_CHESS)
+		{
+			return (ONE_SCORE + 2);
+		}
+		else if (a[3] == BLACK_CHESS)
+		{
+			return (ONE_SCORE + 1);
+		}
+		else
+		{
+			return (ONE_SCORE);
+		}
+	}
+	
+	// 只有一个白
+	if (whiteCnt == 1)
+	{
+		if (a[0] == WHITE_CHESS)
+		{
+			return -(ONE_SCORE);
+		}
+		else if (a[1] == WHITE_CHESS)
+		{
+			return -(ONE_SCORE + 1);
+		}
+		else if (a[2] == WHITE_CHESS)
+		{
+			return -(ONE_SCORE + 2);
+		}
+		else if (a[3] == WHITE_CHESS)
+		{
+			return -(ONE_SCORE + 1);
+		}
+		else
+		{
+			return -(ONE_SCORE);
+		}
+	}
+
+	// 两个黑，基准分100分，每靠边一个减10分，中间每多一个0减10分
+	base = TWO_SCORE;
+	if (blackCnt == 2)
+	{
+		if (a[0] == BLACK_CHESS)
+		{
+			base -= 10;
+		}	
+
+		if (a[4] == BLACK_CHESS)
+		{
+			base -= 10;
+		}
+
+
+		int i = 0;
+		int zeroCnt = 0;
+		for (int i = 0; i < 5; i++)
+		{
+			if (a[i] == BLACK_CHESS)
+			{
+				break;
+			}
+		}
+		i++;
+		for (; i < 5; i++)
+		{
+			if (a[i] == BLACK_CHESS)
+			{
+				break;
+			}
+			else if (a[i] == NO_CHESS)
+			{
+				zeroCnt++;
+			}
+		}
+
+		base -= 10 * zeroCnt;
+		
+		return base;
+	}
+
+	// 两个白，基准分100分，每靠边一个减10分，中间每多一个0减10分
+	base = TWO_SCORE;
+	if (whiteCnt == 2)
+	{
+		if (a[0] == WHITE_CHESS)
+		{
+			base -= 10;
+		}	
+
+		if (a[4] == WHITE_CHESS)
+		{
+			base -= 10;
+		}
+
+
+		int i = 0;
+		int zeroCnt = 0;
+		for (int i = 0; i < 5; i++)
+		{
+			if (a[i] == WHITE_CHESS)
+			{
+				break;
+			}
+		}
+		i++;
+		for (; i < 5; i++)
+		{
+			if (a[i] == WHITE_CHESS)
+			{
+				break;
+			}
+			else if (a[i] == NO_CHESS)
+			{
+				zeroCnt++;
+			}
+		}
+
+		base -= 10 * zeroCnt;
+
+		return -base;
+	}
+
+	// 三个黑，基准分1000分，每靠边一个减100分
+	base = THREE_SCORE;
+	if (blackCnt == 3)
+	{
+		if (a[0] == BLACK_CHESS)
+		{
+			base -= 100;
+		}	
+
+		if (a[4] == BLACK_CHESS)
+		{
+			base -= 100;
+		}
+
+		return base;
+	}
+
+	// 三个白，基准分1000分，每靠边一个减100分
+	base = THREE_SCORE;
+	if (whiteCnt == 3)
+	{
+		if (a[0] == WHITE_CHESS)
+		{
+			base -= 100;
+		}	
+
+		if (a[4] == WHITE_CHESS)
+		{
+			base -= 100;
+		}
+
+		return -base;
+	}
+
+	// 四黑，基准分 1000
+	if (blackCnt == 4)
+	{
+		return FOUR_SCORE;
+	}
+
+	// 四白，基准分 1000
+	if (whiteCnt == 4)
+	{
+		return -FOUR_SCORE;
+	}
+
+	// 五黑
+	if (blackCnt == 5)
+	{
+		return FIVE_SCORE;
+	}
+
+	// 五白
+	return -FIVE_SCORE;
+}
+
+void FiveCellMapInit()
+{
+	int a[5] = {0};
+	int index = 0;
+	for (a[0]=0; a[0] < 3; a[0]++)
+	{
+		for (a[1] = 0; a[1] < 3; a[1]++)
+		{
+			for (a[2] = 0; a[2] < 3; a[2]++)
+			{
+				for (a[3] = 0; a[3] < 3; a[3]++)
+				{
+					for (a[4] = 0; a[4] < 3; a[4]++)
+					{
+						index = a[0]*81 + a[1]*27 + a[2]*9 + a[3]*3 + a[4];
+						g_FiveCellMap[index] = GenFiveCellScore(a);
+					}
+				}
+			}
+		}
+	}
+}
+
+
 
