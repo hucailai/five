@@ -45,7 +45,7 @@ using namespace std;
 
 
 extern LARGE_INTEGER g_tc;
-extern INT64 g_FiveCellMap[FIVECELL_MAX];
+extern INT64 g_FiveCellMap[3][3][3][3][3];
 
 
 #define GET_NS(b,e)  (((e.QuadPart)-(b.QuadPart))*1000*1000*1000)/(g_tc.QuadPart)
@@ -67,6 +67,11 @@ enum DIRECTION
 
 POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiAIColor, UINT32 uiLevel, INT64 *score);
 void FiveCellMapInit();
+inline INT64 Evaluate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor);  // 53300ns
+extern inline INT64 Evaluate2(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor);  // 53300ns
+inline INT64 Get15CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9,
+							int a10, int a11, int a12, int a13, int a14);
+
 
 class CChessAI  
 {

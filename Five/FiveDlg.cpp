@@ -92,6 +92,7 @@ BEGIN_MESSAGE_MAP(CFiveDlg, CDialog)
 	ON_BN_CLICKED(IDC_START, OnStart)
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_BUTTON1, &CFiveDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, &CFiveDlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -125,6 +126,8 @@ BOOL CFiveDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 	
 	// TODO: Add extra initialization here
+	QueryPerformanceFrequency(&g_tc);
+	g_tc.QuadPart = 2338476;
 	
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -263,19 +266,19 @@ void CFiveDlg::ClickChess(int x, int y)
 BYTE g_chess[15][15]=
 {	        /*  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14   */	
 		/*0 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*1 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*2 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*3 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*1 */  0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*2 */  0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0,
+		/*3 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
 		/*4 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*5 */  0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0,
-		/*6 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*5 */  0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 2,
+		/*6 */  0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		/*7 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*8 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*9 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*10*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*8 */  0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+		/*9 */  0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0,
+		/*10*/  0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
 		/*11 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*12*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*13*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*12*/  0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*13*/  0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0,
 		/*14 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 };
@@ -292,7 +295,7 @@ void CFiveDlg::OnStart()
 	POINT pt;
 	INT64 i64Score;
 	BYTE array[15][15] = {0};
-	g_tc.QuadPart = 2499990000;
+
 
 
 
@@ -384,25 +387,50 @@ void CFiveDlg::OnBnClickedButton1()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	//ClickChess(0,0);
+	
+	// 测试 计算性能
+	LARGE_INTEGER t1, t2;
+	QueryPerformanceCounter(&t1);
+	Evaluate(g_chess, BLACK_CHESS);
+	QueryPerformanceCounter(&t2);
+	UINT64 x = GET_NS(t1,t2);
+	CString str2;
+	str2.Format("===%d\n",x);
+	OutputDebugString(str2);
+
+	return;
+	// 测试二，计算5子评分
 	FiveCellMapInit();
-
-
-	char c1,c2,c3,c4,c5;
-	int tmp;
 	CString str;
-	for (int i = 0 ; i < FIVECELL_MAX; i++)
+	int a[5] = {0};
+	for (a[0]=0; a[0] < 3; a[0]++)
 	{
-		tmp = i;
-		c1 = tmp % 3 + '0';
-		tmp = tmp/3;
-		c2 = tmp % 3 + '0';
-		tmp = tmp/3;
-		c3 = tmp % 3 + '0';
-		tmp = tmp/3;
-		c4 = tmp % 3 + '0';
-		tmp = tmp/3;
-		c5 = tmp % 3 + '0';
-		str.Format("%c%c%c%c%c=%d\n",c5,c4,c3,c2,c1, g_FiveCellMap[i]);
-		OutputDebugString(str);
+		for (a[1] = 0; a[1] < 3; a[1]++)
+		{
+			for (a[2] = 0; a[2] < 3; a[2]++)
+			{
+				for (a[3] = 0; a[3] < 3; a[3]++)
+				{
+					for (a[4] = 0; a[4] < 3; a[4]++)
+					{
+						str.Format("%d%d%d%d%d=%d\n",a[0],a[1],a[2],a[3],a[4], g_FiveCellMap[a[0]][a[1]][a[2]][a[3]][a[4]]);
+						OutputDebugString(str);
+					}
+				}
+			}
+		}
 	}
+}
+
+void CFiveDlg::OnBnClickedButton2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	LARGE_INTEGER t1, t2;
+	QueryPerformanceCounter(&t1);
+	Evaluate2(g_chess, BLACK_CHESS);
+	QueryPerformanceCounter(&t2);
+	UINT64 x = GET_NS(t1,t2);
+	CString str2;
+	str2.Format("===%d\n",x);
+	OutputDebugString(str2);
 }

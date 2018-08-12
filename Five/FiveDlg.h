@@ -48,6 +48,7 @@ public:
 	unsigned int m_uiX;
 	unsigned int m_uiY;
 	afx_msg void OnBnClickedButton1();
+	afx_msg void OnBnClickedButton2();
 };
 
 //{{AFX_INSERT_LOCATION}}

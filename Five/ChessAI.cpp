@@ -896,8 +896,6 @@ UINT32 g_uiLeafCnt = 0;
 /* 黑棋得分-白棋得分 */
 inline INT64 Evaluate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor)  // 53300ns
 {
-	g_uiLeafCnt++;
-	//return 0;
 	UINT64 ui64BlackEvaluate = 0;
 	UINT64 ui64WhiteEvaluate = 0;
 	UINT32 uiBlackFive,uiWhiteFive;
@@ -950,6 +948,24 @@ inline INT64 Evaluate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiCol
 	return ui64WhiteEvaluate - ui64BlackEvaluate;
 }
 
+/* 黑棋得分-白棋得分 */
+inline INT64 Evaluate2(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor)
+{
+	INT64 score = 0;
+	for (int i = 0; i < HEIGHT_COUNT; i++)
+	{
+		score += Get15CellScore(a[i][0],a[i][1],a[i][2],a[i][3],a[i][4],a[i][5],a[i][6],a[i][7],a[i][8],a[i][9],a[i][10],a[i][11],a[i][12],a[i][13],a[i][14]);
+	}
+
+	for (int j = 0; j < WIDTH_COUNT; j++)
+	{
+		score += Get15CellScore(a[0][j],a[1][j],a[2][j],a[3][j],a[4][j],a[5][j],a[6][j],a[7][j],a[8][j],a[9][j],a[10][j],a[11][j],a[12][j],a[13][j],a[14][j]);
+	}
+
+
+
+	return uiColor == BLACK_CHESS ?  score : -score;
+}
 /* 计算候选节点 */
 VOID Candidate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], vector<POINT> *pCandidate)
 {
@@ -1094,7 +1110,8 @@ POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 ui
 
 
 
-INT64 g_FiveCellMap[FIVECELL_MAX]={0};
+INT64 g_FiveCellMap[3][3][3][3][3]={0};
+
 INT64 g_TenCellMap[TENCELL_MAX]={0};
 
 // 计算5个子的得分, a[]是一个5个元素的数组
@@ -1321,7 +1338,6 @@ INT64 GenFiveCellScore(int a[])
 void FiveCellMapInit()
 {
 	int a[5] = {0};
-	int index = 0;
 	for (a[0]=0; a[0] < 3; a[0]++)
 	{
 		for (a[1] = 0; a[1] < 3; a[1]++)
@@ -1332,8 +1348,7 @@ void FiveCellMapInit()
 				{
 					for (a[4] = 0; a[4] < 3; a[4]++)
 					{
-						index = a[0]*81 + a[1]*27 + a[2]*9 + a[3]*3 + a[4];
-						g_FiveCellMap[index] = GenFiveCellScore(a);
+						g_FiveCellMap[a[0]][a[1]][a[2]][a[3]][a[4]] = GenFiveCellScore(a);
 					}
 				}
 			}
@@ -1342,4 +1357,29 @@ void FiveCellMapInit()
 }
 
 
+
+
+inline INT64 GetFiveCellScore(int a0, int a1, int a2, int a3, int a4)
+{
+	return g_FiveCellMap[a0][a1][a2][a3][a4];
+}
+
+inline INT64 Get15CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9,
+							int a10, int a11, int a12, int a13, int a14)
+{
+	INT64 s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
+	s0 = g_FiveCellMap[a0][a1][a2][a3][a4];
+	s1 = g_FiveCellMap[a1][a2][a3][a4][a5];
+	s2 = g_FiveCellMap[a2][a3][a4][a5][a6];
+	s3 = g_FiveCellMap[a3][a4][a5][a6][a7];
+	s4 = g_FiveCellMap[a4][a5][a6][a7][a8];
+	s5 = g_FiveCellMap[a5][a6][a7][a8][a9];
+	s6 = g_FiveCellMap[a6][a7][a8][a9][a10];
+	s7 = g_FiveCellMap[a7][a8][a9][a10][a11];
+	s8 = g_FiveCellMap[a8][a9][a10][a11][a12];
+	s9 = g_FiveCellMap[a9][a10][a11][a12][a13];
+	s10 = g_FiveCellMap[a10][a11][a12][a13][a14];
+
+	return s0 + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9 + s10;
+}
 
