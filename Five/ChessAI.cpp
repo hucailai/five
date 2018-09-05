@@ -963,6 +963,9 @@ inline INT64 Evaluate2(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor)
 	}
 
 
+	score += GetALLObliqueLinesScore(a);
+
+
 
 	return uiColor == BLACK_CHESS ?  score : -score;
 }
@@ -970,7 +973,7 @@ inline INT64 Evaluate2(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor)
 VOID Candidate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], vector<POINT> *pCandidate)
 {
 
-	int candFlag = 1;
+	int candFlag = 2;
 	map<LONG, LONG> temp;
 
 	for (int i = 0; i < WIDTH_COUNT; i++)
@@ -1022,6 +1025,14 @@ VOID Candidate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], vector<POINT> *pCan
 UINT32 uiAiCnt = 0;
 
 INT64 g_aui64LevelScore[MAX_LEVEL] = {-CUT_SCORE,-CUT_SCORE,-CUT_SCORE,-CUT_SCORE,-CUT_SCORE,-CUT_SCORE,-CUT_SCORE,-CUT_SCORE,};
+void ClearLevelScore()
+{
+	for (int i = 0; i < MAX_LEVEL; i++)
+	{
+		g_aui64LevelScore[i] = -CUT_SCORE;
+	}
+}
+
 
 CString str;
 POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiLevel, INT64 *pScore)
@@ -1045,7 +1056,7 @@ POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 ui
 			p = candidate[i];
 
 			abChessArray[p.x][p.y] = uiColor;
-			iScoreTemp = Evaluate(abChessArray, uiColor);
+			iScoreTemp = Evaluate2(abChessArray, uiColor);
 			abChessArray[p.x][p.y] = NO_CHESS;
 
 			if (iScoreTemp > g_aui64LevelScore[uiLevel] && -CUT_SCORE != g_aui64LevelScore[uiLevel])
@@ -1077,6 +1088,14 @@ POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 ui
 
 			//str.Format("+候选[%d,%d]  color=%d\n",p.x,p.y,uiColor);
 			//OutputDebugString(str);
+			
+			if (IsWin(abChessArray, uiColor, p.x, p.y))
+			{
+				stMaxPnt.x = p.x;
+				stMaxPnt.y = p.y;
+				*pScore = -CUT_SCORE;
+				return stMaxPnt;
+			}
 			abChessArray[p.x][p.y] = uiColor;
 			AI(abChessArray, COLOR_INVERT(uiColor), uiLevel - 1, &iScoreTemp);
 			abChessArray[p.x][p.y] = NO_CHESS;
@@ -1357,29 +1376,401 @@ void FiveCellMapInit()
 }
 
 
-
-
-inline INT64 GetFiveCellScore(int a0, int a1, int a2, int a3, int a4)
+inline INT64 Get5CellScore(int a0, int a1, int a2, int a3, int a4)
 {
 	return g_FiveCellMap[a0][a1][a2][a3][a4];
 }
 
+inline INT64 Get6CellScore(int a0, int a1, int a2, int a3, int a4, int a5)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	return score;
+}
+
+inline INT64 Get7CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	return score;
+}
+
+inline INT64 Get8CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	return score;
+}
+
+inline INT64 Get9CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	score += g_FiveCellMap[a4][a5][a6][a7][a8];
+	return score;
+}
+
+inline INT64 Get10CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	score += g_FiveCellMap[a4][a5][a6][a7][a8];
+	score += g_FiveCellMap[a5][a6][a7][a8][a9];
+	return score;
+}
+
+
+
+inline INT64 Get11CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	score += g_FiveCellMap[a4][a5][a6][a7][a8];
+	score += g_FiveCellMap[a5][a6][a7][a8][a9];
+	score += g_FiveCellMap[a6][a7][a8][a9][a10];
+	return score;
+}
+
+inline INT64 Get12CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	score += g_FiveCellMap[a4][a5][a6][a7][a8];
+	score += g_FiveCellMap[a5][a6][a7][a8][a9];
+	score += g_FiveCellMap[a6][a7][a8][a9][a10];
+	score += g_FiveCellMap[a7][a8][a9][a10][a11];
+	return score;
+}
+
+inline INT64 Get13CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	score += g_FiveCellMap[a4][a5][a6][a7][a8];
+	score += g_FiveCellMap[a5][a6][a7][a8][a9];
+	score += g_FiveCellMap[a6][a7][a8][a9][a10];
+	score += g_FiveCellMap[a7][a8][a9][a10][a11];
+	score += g_FiveCellMap[a8][a9][a10][a11][a12];
+	return score;
+}
+
+inline INT64 Get14CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9,
+							int a10, int a11, int a12, int a13)
+{
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	score += g_FiveCellMap[a4][a5][a6][a7][a8];
+	score += g_FiveCellMap[a5][a6][a7][a8][a9];
+	score += g_FiveCellMap[a6][a7][a8][a9][a10];
+	score += g_FiveCellMap[a7][a8][a9][a10][a11];
+	score += g_FiveCellMap[a8][a9][a10][a11][a12];
+	score += g_FiveCellMap[a9][a10][a11][a12][a13];
+	return score;
+}
+
+
 inline INT64 Get15CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9,
 							int a10, int a11, int a12, int a13, int a14)
 {
-	INT64 s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
-	s0 = g_FiveCellMap[a0][a1][a2][a3][a4];
-	s1 = g_FiveCellMap[a1][a2][a3][a4][a5];
-	s2 = g_FiveCellMap[a2][a3][a4][a5][a6];
-	s3 = g_FiveCellMap[a3][a4][a5][a6][a7];
-	s4 = g_FiveCellMap[a4][a5][a6][a7][a8];
-	s5 = g_FiveCellMap[a5][a6][a7][a8][a9];
-	s6 = g_FiveCellMap[a6][a7][a8][a9][a10];
-	s7 = g_FiveCellMap[a7][a8][a9][a10][a11];
-	s8 = g_FiveCellMap[a8][a9][a10][a11][a12];
-	s9 = g_FiveCellMap[a9][a10][a11][a12][a13];
-	s10 = g_FiveCellMap[a10][a11][a12][a13][a14];
+	INT64 score = 0;
+	score += g_FiveCellMap[a0][a1][a2][a3][a4];
+	score += g_FiveCellMap[a1][a2][a3][a4][a5];
+	score += g_FiveCellMap[a2][a3][a4][a5][a6];
+	score += g_FiveCellMap[a3][a4][a5][a6][a7];
+	score += g_FiveCellMap[a4][a5][a6][a7][a8];
+	score += g_FiveCellMap[a5][a6][a7][a8][a9];
+	score += g_FiveCellMap[a6][a7][a8][a9][a10];
+	score += g_FiveCellMap[a7][a8][a9][a10][a11];
+	score += g_FiveCellMap[a8][a9][a10][a11][a12];
+	score += g_FiveCellMap[a9][a10][a11][a12][a13];
+	score += g_FiveCellMap[a10][a11][a12][a13][a14];
 
-	return s0 + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9 + s10;
+	return score;
 }
 
+
+inline INT64 GetALLObliqueLinesScore(BYTE a[HEIGHT_COUNT][WIDTH_COUNT])
+{
+	INT64 score = 0 ;
+	score += Get15CellScore(a[0][0],a[1][1],a[2][2],a[3][3],a[4][4],a[5][5],a[6][6],a[7][7],a[8][8],a[9][9],a[10][10],a[11][11],a[12][12],a[13][13],a[14][14]);
+	score += Get14CellScore(a[0][1],a[1][2],a[2][3],a[3][4],a[4][5],a[5][6],a[6][7],a[7][8],a[8][9],a[9][10],a[10][11],a[11][12],a[12][13],a[13][14]);
+	score += Get13CellScore(a[0][2],a[1][3],a[2][4],a[3][5],a[4][6],a[5][7],a[6][8],a[7][9],a[8][10],a[9][11],a[10][12],a[11][13],a[12][14]);
+	score += Get12CellScore(a[0][3],a[1][4],a[2][5],a[3][6],a[4][7],a[5][8],a[6][9],a[7][10],a[8][11],a[9][12],a[10][13],a[11][14]);
+	score += Get11CellScore(a[0][4],a[1][5],a[2][6],a[3][7],a[4][8],a[5][9],a[6][10],a[7][11],a[8][12],a[9][13],a[10][14]);
+	score += Get10CellScore(a[0][5],a[1][6],a[2][7],a[3][8],a[4][9],a[5][10],a[6][11],a[7][12],a[8][13],a[9][14]);
+	score += Get9CellScore(a[0][6],a[1][7],a[2][8],a[3][9],a[4][10],a[5][11],a[6][12],a[7][13],a[8][14]);
+	score += Get8CellScore(a[0][7],a[1][8],a[2][9],a[3][10],a[4][11],a[5][12],a[6][13],a[7][14]);
+	score += Get7CellScore(a[0][8],a[1][9],a[2][10],a[3][11],a[4][12],a[5][13],a[6][14]);
+	score += Get6CellScore(a[0][9],a[1][10],a[2][11],a[3][12],a[4][13],a[5][14]);
+	score += Get5CellScore(a[0][10],a[1][11],a[2][12],a[3][13],a[4][14]);
+
+	score += Get14CellScore(a[1][0],a[2][1],a[3][2],a[4][3],a[5][4],a[6][5],a[7][6],a[8][7],a[9][8],a[10][9],a[11][10],a[12][11],a[13][12],a[14][13]);
+	score += Get13CellScore(a[2][0],a[3][1],a[4][2],a[5][3],a[6][4],a[7][5],a[8][6],a[9][7],a[10][8],a[11][9],a[12][10],a[13][11],a[14][12]);
+	score += Get12CellScore(a[3][0],a[4][1],a[5][2],a[6][3],a[7][4],a[8][5],a[9][6],a[10][7],a[11][8],a[12][9],a[13][10],a[14][11]);
+	score += Get11CellScore(a[4][0],a[5][1],a[6][2],a[7][3],a[8][4],a[9][5],a[10][6],a[11][7],a[12][8],a[13][9],a[14][10]);
+	score += Get10CellScore(a[5][0],a[6][1],a[7][2],a[8][3],a[9][4],a[10][5],a[11][6],a[12][7],a[13][8],a[14][9]);
+	score += Get9CellScore(a[6][0],a[7][1],a[8][2],a[9][3],a[10][4],a[11][5],a[12][6],a[13][7],a[14][8]);
+	score += Get8CellScore(a[7][0],a[8][1],a[9][2],a[10][3],a[11][4],a[12][5],a[13][6],a[14][7]);
+	score += Get7CellScore(a[8][0],a[9][1],a[10][2],a[11][3],a[12][4],a[13][5],a[14][6]);
+	score += Get6CellScore(a[9][0],a[10][1],a[11][2],a[12][3],a[13][4],a[14][5]);
+	score += Get5CellScore(a[10][0],a[11][1],a[12][2],a[13][3],a[14][4]);
+
+	score += Get15CellScore(a[14][0],a[13][1],a[12][2],a[11][3],a[10][4],a[9][5],a[8][6],a[7][7],a[6][8],a[5][9],a[4][10],a[3][11],a[2][12],a[1][13],a[0][14]);
+	score += Get14CellScore(a[14][1],a[13][2],a[12][3],a[11][4],a[10][5],a[9][6],a[8][7],a[7][8],a[6][9],a[5][10],a[4][11],a[3][12],a[2][13],a[1][14]);
+	score += Get13CellScore(a[14][2],a[13][3],a[12][4],a[11][5],a[10][6],a[9][7],a[8][8],a[7][9],a[6][10],a[5][11],a[4][12],a[3][13],a[2][14]);
+	score += Get12CellScore(a[14][3],a[13][4],a[12][5],a[11][6],a[10][7],a[9][8],a[8][9],a[7][10],a[6][11],a[5][12],a[4][13],a[3][14]);
+	score += Get11CellScore(a[14][4],a[13][5],a[12][6],a[11][7],a[10][8],a[9][9],a[8][10],a[7][11],a[6][12],a[5][13],a[4][14]);
+	score += Get10CellScore(a[14][5],a[13][6],a[12][7],a[11][8],a[10][9],a[9][10],a[8][11],a[7][12],a[6][13],a[5][14]);
+	score += Get9CellScore(a[14][6],a[13][7],a[12][8],a[11][9],a[10][10],a[9][11],a[8][12],a[7][13],a[6][14]);
+	score += Get8CellScore(a[14][7],a[13][8],a[12][9],a[11][10],a[10][11],a[9][12],a[8][13],a[7][14]);
+	score += Get7CellScore(a[14][8],a[13][9],a[12][10],a[11][11],a[10][12],a[9][13],a[8][14]);
+	score += Get6CellScore(a[14][9],a[13][10],a[12][11],a[11][12],a[10][13],a[9][14]);
+	score += Get5CellScore(a[14][10],a[13][11],a[12][12],a[11][13],a[10][14]);
+
+	score += Get14CellScore(a[13][0],a[12][1],a[11][2],a[10][3],a[9][4],a[8][5],a[7][6],a[6][7],a[5][8],a[4][9],a[3][10],a[2][11],a[1][12],a[0][13]);
+	score += Get13CellScore(a[12][0],a[11][1],a[10][2],a[9][3],a[8][4],a[7][5],a[6][6],a[5][7],a[4][8],a[3][9],a[2][10],a[1][11],a[0][12]);
+	score += Get12CellScore(a[11][0],a[10][1],a[9][2],a[8][3],a[7][4],a[6][5],a[5][6],a[4][7],a[3][8],a[2][9],a[1][10],a[0][11]);
+	score += Get11CellScore(a[10][0],a[9][1],a[8][2],a[7][3],a[6][4],a[5][5],a[4][6],a[3][7],a[2][8],a[1][9],a[0][10]);
+	score += Get10CellScore(a[9][0],a[8][1],a[7][2],a[6][3],a[5][4],a[4][5],a[3][6],a[2][7],a[1][8],a[0][9]);
+	score += Get9CellScore(a[8][0],a[7][1],a[6][2],a[5][3],a[4][4],a[3][5],a[2][6],a[1][7],a[0][8]);
+	score += Get8CellScore(a[7][0],a[6][1],a[5][2],a[4][3],a[3][4],a[2][5],a[1][6],a[0][7]);
+	score += Get7CellScore(a[6][0],a[5][1],a[4][2],a[3][3],a[2][4],a[1][5],a[0][6]);
+	score += Get6CellScore(a[5][0],a[4][1],a[3][2],a[2][3],a[1][4],a[0][5]);
+	score += Get5CellScore(a[4][0],a[3][1],a[2][2],a[1][3],a[0][4]);
+
+	return score;
+}
+
+
+/* 判断落子后是否战斗结束 uiX：行，uiY：列 */
+inline BOOL IsWin(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiX, UINT32 uiY)
+{
+	int m;
+	int count = 1;
+	for (m = uiX - 1; m >= 0 ; m--)
+	{
+		if (abChessArray[m][uiY] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+
+	for (m = uiX + 1; m <  HEIGHT_COUNT ; m++)
+	{
+		if (abChessArray[m][uiY] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+	if (count >= 5)
+	{
+		return TRUE;
+	}
+
+	count = 1;
+	for (m = uiY - 1; m >= 0 ; m--)
+	{
+		if (abChessArray[uiX][m] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+
+	for (m = uiY + 1; m <  WIDTH_COUNT ; m++)
+	{
+		if (abChessArray[uiX][m] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+	if (count >= 5)
+	{
+		return TRUE;
+	}
+	
+	/// x+,y+
+	count = 1;
+	for (m = 0; m < HEIGHT_COUNT ; m++)
+	{
+		if (uiX - m < 0 || uiY - m < 0)
+		{
+			break;
+		}
+		if (abChessArray[uiX-m][uiY-m] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+
+	for (m = 0; m < HEIGHT_COUNT ; m++)
+	{
+		if (uiX + m >= HEIGHT_COUNT || uiY + m >= WIDTH_COUNT )
+		{
+			break;
+		}
+		if (abChessArray[uiX+m][uiY+m] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+	if (count >= 5)
+	{
+		return TRUE;
+	}
+
+
+	/// x+, y-
+	count = 1;
+	for (m = 0; m < HEIGHT_COUNT ; m++)
+	{
+		if (uiX - m < 0 || uiY + m >= WIDTH_COUNT)
+		{
+			break;
+		}
+		if (abChessArray[uiX-m][uiY+m] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+
+	for (m = 0; m < HEIGHT_COUNT ; m++)
+	{
+		if (uiX + m >= HEIGHT_COUNT || uiY - m < 0 )
+		{
+			break;
+		}
+		if (abChessArray[uiX+m][uiY-m] == uiColor)
+		{
+			count ++;
+			continue;
+		}
+		break;
+	}
+	if (count >= 5)
+	{
+		return TRUE;
+	}
+
+
+	return FALSE;
+}
+
+
+/*  uiX：行，uiY：列 */
+inline INT64 GetPointScore(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiX, UINT32 uiY)
+{
+	INT64 begin_score = 0 ,end_score = 0,score;
+
+begin:
+	for (int i = uiX - 4; i < uiX; i++)
+	{
+		if (i < 0)
+		{
+			continue;
+		}
+		if (i >= HEIGHT_COUNT)
+		{
+			break;
+		}
+
+		score += Get5CellScore(a[i][uiY],a[i+1][uiY],a[i+2][uiY],a[i+3][uiY],a[i+4][uiY]);
+	}
+
+	for (int i = uiY - 4; i < uiY; i++)
+	{
+		if (i < 0)
+		{
+			continue;
+		}
+		if (i >= WIDTH_COUNT)
+		{
+			break;
+		}
+
+		score += Get5CellScore(a[uiX][i],a[uiX][i+1],a[uiX][i+2],a[uiX][i+3],a[uiX][i+4]);
+	}
+
+	for (int i = 4; i >= 0; i--)
+	{
+		if (uiX - i < 0 || uiY - i < 0)
+		{
+			continue;
+		}
+
+		if (uiX - i + 4 >= HEIGHT_COUNT || uiY - i + 4 >= WIDTH_COUNT)
+		{
+			break;
+		}
+
+		score += Get5CellScore(a[uiX -i][uiY-i],a[uiX -i+1][uiY-i+1],a[uiX -i+2][uiY-i+2],a[uiX -i+3][uiY-i+3],a[uiX -i+4][uiY-i+4]);
+	}
+
+	for (int i = 4; i >= 0; i--)
+	{
+		if (uiX - i < 0 || uiY + i >= WIDTH_COUNT)
+		{
+			continue;
+		}
+
+		if (uiX - i + 4 >= HEIGHT_COUNT || uiY + i - 4 < 0)
+		{
+			break;
+		}
+
+		score += Get5CellScore(a[uiX -i][uiY+i],a[uiX -i+1][uiY+i-1],a[uiX -i+2][uiY+i-2],a[uiX -i+3][uiY+i-3],a[uiX -i+4][uiY+i-4]);
+	}
+
+	if (a[uiX][uiY] == NO_CHESS)
+	{
+		begin_score = score;
+		a[uiX][uiY] = uiColor;
+		goto begin;
+	}
+	else
+	{
+		end_score = score;
+		a[uiX][uiY] = NO_CHESS;
+	}
+
+	
+	
+	return TRUE;
+}

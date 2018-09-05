@@ -341,6 +341,10 @@
 				RelativePath="StdAfx.h"
 				>
 			</File>
+			<File
+				RelativePath=".\testcase.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

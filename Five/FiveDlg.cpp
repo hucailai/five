@@ -5,6 +5,7 @@
 #include "Five.h"
 #include "FiveDlg.h"
 #include "ChessAI.h"
+#include "testcase.h"
 #include <tlhelp32.h>
 #include <windows.h>
 
@@ -102,6 +103,8 @@ BOOL CFiveDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
+	CString str;
+
 	// Add "About..." menu item to system menu.
 
 	// IDM_ABOUTBOX must be in the system command range.
@@ -127,7 +130,13 @@ BOOL CFiveDlg::OnInitDialog()
 	
 	// TODO: Add extra initialization here
 	QueryPerformanceFrequency(&g_tc);
-	g_tc.QuadPart = 2338476;
+	//g_tc.QuadPart = 2338476;
+	FiveCellMapInit();
+
+	str.Format("0x%p", g_aui64LevelScore);
+	SetDlgItemText(IDC_RESULT, str);
+
+
 	
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -270,7 +279,7 @@ BYTE g_chess[15][15]=
 		/*2 */  0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0,
 		/*3 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
 		/*4 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		/*5 */  0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 2,
+		/*5 */  0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 0, 2,
 		/*6 */  0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		/*7 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		/*8 */  0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
@@ -320,10 +329,18 @@ void CFiveDlg::OnStart()
 	HANDLE processH=::OpenProcess(PROCESS_ALL_ACCESS,false,processid);
 	//读指定进程 内存数据
 	DWORD byread;
-	LPCVOID pbase=(LPCVOID)0x00BB4034;   //棋盘数据基址
+	LPCVOID pbase=(LPCVOID)BASE_ADDR;   //棋盘数据基址
+	int x = 0;
 	LPVOID  nbuffer=(LPVOID)&array;    //存放棋盘数据
+	BOOL b = ::ReadProcessMemory(processH,pbase,nbuffer,4,&byread);
+	//LPCVOID poffAddr = nbuffer
+	x = * (int *)nbuffer;
 
-	BOOL b = ::ReadProcessMemory(processH,pbase,nbuffer,15*15,&byread);
+	pbase = (LPCVOID)(x + 244);
+
+	nbuffer=(LPVOID)&array;    //存放棋盘数据
+
+	b = ::ReadProcessMemory(processH,pbase,nbuffer,15*15,&byread);
 
 	for (int x = 0; x < 15; x++)
 	{
@@ -351,7 +368,7 @@ void CFiveDlg::OnStart()
 		}
 	}
 
-	memcpy(array, g_chess, 15*15);
+	//memcpy(array, g_chess, 15*15);
 
 
 	SetDlgItemText(IDC_RESULT, "");
@@ -360,7 +377,8 @@ void CFiveDlg::OnStart()
 
 
 	i64Score = 0;
-	pt = AI(array, BLACK_CHESS, 5, &i64Score);
+	pt = AI(array, BLACK_CHESS, 3, &i64Score);
+	ClearLevelScore();
 
 	CString str2;
 	str2.Format("AI Cnt=%d\n", uiAiCnt);
@@ -370,13 +388,13 @@ void CFiveDlg::OnStart()
 	LARGE_INTEGER t1, t2;
 	QueryPerformanceCounter(&t1);
 	QueryPerformanceCounter(&t2);
-	UINT64 x = GET_NS(t1,t2);
+	//UINT64 x = GET_NS(t1,t2);
 
 	CString str;
 	str.Format("叶子节点数:%u总共耗时:%u(ms)  位置（x:%u,y:%u） 得分:%d", g_uiLeafCnt, uiEnd - uiStart, pt.x, pt.y, i64Score);
 	SetDlgItemText(IDC_RESULT, str);
 
-	//ClickChess(pt.y,pt.x);
+	ClickChess(pt.y,pt.x);
 	
 }
 
@@ -395,42 +413,134 @@ void CFiveDlg::OnBnClickedButton1()
 	QueryPerformanceCounter(&t2);
 	UINT64 x = GET_NS(t1,t2);
 	CString str2;
-	str2.Format("===%d\n",x);
+	str2.Format("老算法盘面得分===%d\n",x);
 	OutputDebugString(str2);
 
 	return;
-	// 测试二，计算5子评分
-	FiveCellMapInit();
-	CString str;
-	int a[5] = {0};
-	for (a[0]=0; a[0] < 3; a[0]++)
-	{
-		for (a[1] = 0; a[1] < 3; a[1]++)
-		{
-			for (a[2] = 0; a[2] < 3; a[2]++)
-			{
-				for (a[3] = 0; a[3] < 3; a[3]++)
-				{
-					for (a[4] = 0; a[4] < 3; a[4]++)
-					{
-						str.Format("%d%d%d%d%d=%d\n",a[0],a[1],a[2],a[3],a[4], g_FiveCellMap[a[0]][a[1]][a[2]][a[3]][a[4]]);
-						OutputDebugString(str);
-					}
-				}
-			}
-		}
-	}
 }
 
 void CFiveDlg::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
+	TestSuit();
+/*
 	LARGE_INTEGER t1, t2;
 	QueryPerformanceCounter(&t1);
 	Evaluate2(g_chess, BLACK_CHESS);
 	QueryPerformanceCounter(&t2);
 	UINT64 x = GET_NS(t1,t2);
 	CString str2;
-	str2.Format("===%d\n",x);
+	str2.Format("新算法盘面得分===%d\n",x);
 	OutputDebugString(str2);
+
+
+	QueryPerformanceCounter(&t1);
+	IsWin(g_chess, BLACK_CHESS, 7, 7);
+	QueryPerformanceCounter(&t2);
+	x = GET_NS(t1,t2);
+	str2.Format("落子输赢判断===%d\n",x);
+	OutputDebugString(str2);
+	*/
+}
+
+
+void TestCase1()
+{
+	POINT pt;
+	INT64 i64Score;
+	CString str;
+	UINT32 uiStart;
+	UINT32 uiEnd;
+	BYTE array[15][15]=
+	{	        /*  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14   */	
+		/*0 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*1 */  0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*2 */  0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0,
+		/*3 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
+		/*4 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*5 */  0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 0, 0, 0, 2,
+		/*6 */  0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*7 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*8 */  0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+		/*9 */  0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0,
+		/*10*/  0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*11 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*12*/  0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*13*/  0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0,
+		/*14 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+	};
+	i64Score = 0;
+	uiStart = GetTickCount();
+	pt = AI(array, BLACK_CHESS, 3, &i64Score);
+	uiEnd = GetTickCount();
+	ClearLevelScore();
+	ASSERT(pt.x == 5 && pt.y == 5);
+
+	str.Format("TestCase1:总共耗时(%u(ms))  位置（x:%u,y:%u） 得分:%d\n", uiEnd - uiStart, pt.x, pt.y, i64Score);
+	OutputDebugString(str);
+
+	i64Score = 0;
+	uiStart = GetTickCount();
+	pt = AI(array, BLACK_CHESS, 2, &i64Score);
+	uiEnd = GetTickCount();
+	ClearLevelScore();
+	ASSERT(pt.x == 5 && pt.y == 5);
+	str.Format("TestCase1:总共耗时(%u(ms))  位置（x:%u,y:%u） 得分:%d\n", uiEnd - uiStart, pt.x, pt.y, i64Score);
+	OutputDebugString(str);
+
+	i64Score = 0;
+	uiStart = GetTickCount();
+	pt = AI(array, BLACK_CHESS, 1, &i64Score);
+	uiEnd = GetTickCount();
+	ClearLevelScore();
+	
+
+	ASSERT(pt.x == 5 && pt.y == 5);
+	str.Format("TestCase1:总共耗时(%u(ms))  位置（x:%u,y:%u） 得分:%d\n", uiEnd - uiStart, pt.x, pt.y, i64Score);
+	OutputDebugString(str);
+}
+
+
+void TestCase2()
+{
+	POINT pt;
+	INT64 i64Score;
+	CString str;
+	UINT32 uiStart;
+	UINT32 uiEnd;
+	BYTE array[15][15]=
+	{	    /*  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14   */	
+		/*0 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*1 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*2 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*3 */  0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
+		/*4 */  0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0,
+		/*5 */  0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 0, 0,
+		/*6 */  0, 0, 0, 0, 0, 0, 1, 1, 2, 0, 2, 0, 0, 0, 0,
+		/*7 */  0, 0, 0, 0, 1, 0, 2, 2, 2, 1, 0, 2, 0, 0, 0,
+		/*8 */  0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 1, 0, 0,
+		/*9 */  0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0,
+		/*10*/  0, 0, 0, 0, 0, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0,
+		/*11 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*12*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*13*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		/*14 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+	};
+	i64Score = 0;
+	uiStart = GetTickCount();
+	pt = AI(array, BLACK_CHESS, 3, &i64Score);
+	uiEnd = GetTickCount();
+	ClearLevelScore();
+	ASSERT(pt.x == 5 && pt.y == 5);
+
+	str.Format("TestCase1:总共耗时(%u(ms))  位置（x:%u,y:%u） 得分:%d\n", uiEnd - uiStart, pt.x, pt.y, i64Score);
+	OutputDebugString(str);
+}
+
+void TestSuit()
+{
+	//TestCase1();
+	TestCase2();
 }
