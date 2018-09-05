@@ -1697,7 +1697,7 @@ inline BOOL IsWin(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, 
 /*  uiX£ºÐÐ£¬uiY£ºÁÐ */
 inline INT64 GetPointScore(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiX, UINT32 uiY)
 {
-	INT64 begin_score = 0 ,end_score = 0,score;
+	INT64 begin_score = 0 ,end_score = 0,score = 0;
 
 begin:
 	for (int i = uiX - 4; i < uiX; i++)
@@ -1770,7 +1770,10 @@ begin:
 		a[uiX][uiY] = NO_CHESS;
 	}
 
-	
-	
-	return TRUE;
+	if (uiColor == WHITE_CHESS)
+	{
+		return begin_score - end_score;
+	}
+
+	return end_score - begin_score;
 }

@@ -81,6 +81,7 @@ inline INT64 Get15CellScore(int a0, int a1, int a2, int a3, int a4, int a5, int 
 							int a10, int a11, int a12, int a13, int a14);
 inline INT64 GetALLObliqueLinesScore(BYTE a[HEIGHT_COUNT][WIDTH_COUNT]);
 extern inline BOOL IsWin(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiX, UINT32 uiY);
+extern inline INT64 GetPointScore(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiX, UINT32 uiY);
 
 
 class CChessAI  

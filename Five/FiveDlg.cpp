@@ -408,13 +408,38 @@ void CFiveDlg::OnBnClickedButton1()
 	
 	// 测试 计算性能
 	LARGE_INTEGER t1, t2;
+	UINT64 x;
+	CString str2;
+
 	QueryPerformanceCounter(&t1);
 	Evaluate(g_chess, BLACK_CHESS);
 	QueryPerformanceCounter(&t2);
-	UINT64 x = GET_NS(t1,t2);
-	CString str2;
+	x = GET_NS(t1,t2);
 	str2.Format("老算法盘面得分===%d\n",x);
 	OutputDebugString(str2);
+
+	QueryPerformanceCounter(&t1);
+	Evaluate2(g_chess, BLACK_CHESS);
+	QueryPerformanceCounter(&t2);
+	x = GET_NS(t1,t2);
+	str2.Format("新算法盘面得分===%d\n",x);
+	OutputDebugString(str2);
+
+	QueryPerformanceCounter(&t1);
+	IsWin(g_chess, BLACK_CHESS, 6, 7);
+	QueryPerformanceCounter(&t2);
+	x = GET_NS(t1,t2);
+	str2.Format("IsWin===%d\n",x);
+	OutputDebugString(str2);
+
+	QueryPerformanceCounter(&t1);
+	GetPointScore(g_chess, BLACK_CHESS, 6, 7);
+	QueryPerformanceCounter(&t2);
+	x = GET_NS(t1,t2);
+	str2.Format("GetPointScore===%d\n",x);
+	OutputDebugString(str2);
+
+	
 
 	return;
 }
