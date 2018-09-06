@@ -18,8 +18,8 @@ static char THIS_FILE[]=__FILE__;
 
 
 UINT32 g_uiAIColor = BLACK_CHESS;
-vector<POINT> m_gBlackChessArray;
-vector<POINT> m_gWhiteChessArray;
+vector<AI_POINT> m_gBlackChessArray;
+vector<AI_POINT> m_gWhiteChessArray;
 
 
 
@@ -970,7 +970,7 @@ inline INT64 Evaluate2(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor)
 	return uiColor == BLACK_CHESS ?  score : -score;
 }
 /* 计算候选节点 */
-VOID Candidate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], vector<POINT> *pCandidate)
+VOID Candidate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], vector<AI_POINT> *pCandidate)
 {
 
 	int candFlag = 2;
@@ -1006,9 +1006,15 @@ VOID Candidate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], vector<POINT> *pCan
 						continue;
 					}
 
-					POINT pt = {m,n};
+					AI_POINT pt = {m,n};
 					pCandidate->push_back(pt);
 					temp.insert(pair<LONG, LONG>((m<<16)+n, 0));
+					
+					// 只取5个
+					if (pCandidate->size() > 4)
+					{
+						return;
+					}
 				}
 			}
 		}
@@ -1016,10 +1022,70 @@ VOID Candidate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], vector<POINT> *pCan
 
 	if (pCandidate->size() == 0)
 	{
-		POINT pt = {7,7};
+		AI_POINT pt = {7,7};
 		pCandidate->push_back(pt);
 	}
 }
+
+
+/* 计算候选节点 */
+VOID Candidate2(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], list<AI_POINT > *pCandidate, UINT32 uiColor, INT64 uiBase)
+{
+
+	int candFlag = 2;
+	map<LONG, LONG> temp;
+
+	for (int i = 0; i < WIDTH_COUNT; i++)
+	{
+		for (int j = 0; j < HEIGHT_COUNT; j++)
+		{
+
+			if (abChessArray[i][j] == NO_CHESS)
+			{
+				continue;
+			}
+
+			for (int m = i - candFlag; m <= i + candFlag; m++)
+			{
+				for (int n = j - candFlag; n <= j + candFlag; n++)
+				{
+					if ((m < 0 || n < 0 || m >= WIDTH_COUNT || n >= HEIGHT_COUNT) || (m == i && n == j))
+					{
+						continue;
+					}
+
+					if (temp.find((m<<16)+n) != temp.end())
+					{
+						// 该点已经加入候选队列了
+						continue;
+					}
+					if (abChessArray[m][n] != NO_CHESS)
+					{
+						// 是已经下过点
+						continue;
+					}
+
+					AI_POINT pt = {m,n};
+					pCandidate->push_back(pt);
+					temp.insert(pair<LONG, LONG>((m<<16)+n, 0));
+
+					// 只取5个
+					if (pCandidate->size() < 5)
+					{
+						return;
+					}
+				}
+			}
+		}
+	}
+
+	if (pCandidate->size() == 0)
+	{
+		AI_POINT pt = {7,7};
+		pCandidate->push_back(pt);
+	}
+}
+
 
 
 UINT32 uiAiCnt = 0;
@@ -1035,29 +1101,34 @@ void ClearLevelScore()
 
 
 CString str;
-POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiLevel, INT64 *pScore)
+AI_POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiLevel, INT64 *pScore, INT64 uiBase)
 {
 
 	uiAiCnt++;
-	vector<POINT> candidate;
-	POINT p = {0};
+	list<AI_POINT> candidate;
+	AI_POINT p = {0};
 	INT64 iScoreTemp = 0;
 	INT64 iMaxScore = -F_INFINITE;
-	POINT stMaxPnt = {0};
+	AI_POINT stMaxPnt = {0};
+	INT64 pointScore = 0;
 
 	/* 1.计算候选结点 */
-	Candidate(abChessArray, &candidate);
+	Candidate2(abChessArray, &candidate, uiColor, uiBase);
 
 	/* 2.为每个候选结点打分 */
 	if (uiLevel == 1)
 	{
-		for (UINT32 i = 0; i < candidate.size(); i++)
+		for (list<AI_POINT>::iterator it = candidate.begin(); it != candidate.end(); ++it)
 		{
-			p = candidate[i];
+			p = *it;
+			pointScore = uiBase;
+			pointScore += GetPointScore(abChessArray, uiColor, p.x, p.y);
+			if (uiColor == WHITE_CHESS)
+			{
+				pointScore =-pointScore;
+			}
 
-			abChessArray[p.x][p.y] = uiColor;
-			iScoreTemp = Evaluate2(abChessArray, uiColor);
-			abChessArray[p.x][p.y] = NO_CHESS;
+			iScoreTemp = pointScore;
 
 			if (iScoreTemp > g_aui64LevelScore[uiLevel] && -CUT_SCORE != g_aui64LevelScore[uiLevel])
 			{
@@ -1082,13 +1153,10 @@ POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 ui
 	}
 	else
 	{
-		for (UINT32 i = 0; i < candidate.size(); i++)
+		for (list<AI_POINT>::iterator it = candidate.begin(); it != candidate.end(); ++it)
 		{
-			p = candidate[i];
-
-			//str.Format("+候选[%d,%d]  color=%d\n",p.x,p.y,uiColor);
-			//OutputDebugString(str);
-			
+			p = *it;
+		
 			if (IsWin(abChessArray, uiColor, p.x, p.y))
 			{
 				stMaxPnt.x = p.x;
@@ -1096,11 +1164,11 @@ POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 ui
 				*pScore = -CUT_SCORE;
 				return stMaxPnt;
 			}
+			pointScore = GetPointScore(abChessArray, uiColor, p.x, p.y);
+
 			abChessArray[p.x][p.y] = uiColor;
-			AI(abChessArray, COLOR_INVERT(uiColor), uiLevel - 1, &iScoreTemp);
+			AI(abChessArray, COLOR_INVERT(uiColor), uiLevel - 1, &iScoreTemp, pointScore+uiBase);
 			abChessArray[p.x][p.y] = NO_CHESS;
-			//str.Format("-候选[%d,%d]  color=%d\n",p.x,p.y,uiColor);
-			//OutputDebugString(str);
 
 			if (iScoreTemp > g_aui64LevelScore[uiLevel] && -CUT_SCORE != g_aui64LevelScore[uiLevel])
 			{
@@ -1693,12 +1761,13 @@ inline BOOL IsWin(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, 
 	return FALSE;
 }
 
+int g_iCntGetPointScore = 0;
 
 /*  uiX：行，uiY：列 */
 inline INT64 GetPointScore(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiX, UINT32 uiY)
 {
 	INT64 begin_score = 0 ,end_score = 0,score = 0;
-
+	g_iCntGetPointScore++;
 begin:
 	for (int i = uiX - 4; i < uiX; i++)
 	{
@@ -1770,10 +1839,10 @@ begin:
 		a[uiX][uiY] = NO_CHESS;
 	}
 
-	if (uiColor == WHITE_CHESS)
-	{
-		return begin_score - end_score;
-	}
+	//if (uiColor == WHITE_CHESS)
+	//{
+	//	return begin_score - end_score;
+	//}
 
 	return end_score - begin_score;
 }

@@ -10,9 +10,18 @@
 #endif // _MSC_VER > 1000
 
 #include <vector>
+#include <list>
 #include <map>
 
 using namespace std;
+
+typedef struct stAI_POINT
+{
+	LONG x;
+	LONG y;
+	INT64 score;
+}AI_POINT;
+
 
 #define BASE_ADDR 0x0041D148
 
@@ -72,7 +81,7 @@ enum DIRECTION
 //#define DIRECTION_D		3	// X£¬Y·´·½Ïò
 
 
-POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiAIColor, UINT32 uiLevel, INT64 *score);
+AI_POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiAIColor, UINT32 uiLevel, INT64 *score, INT64 uiBase);
 void ClearLevelScore();
 void FiveCellMapInit();
 extern inline INT64 Evaluate(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor);  // 53300ns
@@ -84,6 +93,8 @@ extern inline BOOL IsWin(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 ui
 extern inline INT64 GetPointScore(BYTE a[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32 uiX, UINT32 uiY);
 
 
+
+
 class CChessAI  
 {
 public:
@@ -92,18 +103,18 @@ public:
 	CChessAI();
 	virtual ~CChessAI();
 
-	vector<POINT> m_blackChessArray;
-	vector<POINT> m_whiteChessArray;
+	vector<AI_POINT> m_blackChessArray;
+	vector<AI_POINT> m_whiteChessArray;
 
 	void UpdataChessData(BYTE *pData);
 
-	void GetPos(POINT &pt);
+	void GetPos(AI_POINT &pt);
 
-	BOOL CanFive(POINT pt, int nColor);
+	BOOL CanFive(AI_POINT pt, int nColor);
 
-	BOOL CanFour(POINT pt, int nColor);
+	BOOL CanFour(AI_POINT pt, int nColor);
 
-	BOOL CanThree(POINT pt, int nColor, int nDirection);
+	BOOL CanThree(AI_POINT pt, int nColor, int nDirection);
 
 };
 

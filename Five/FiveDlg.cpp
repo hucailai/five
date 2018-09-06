@@ -301,7 +301,7 @@ extern UINT32 g_uiLeafCnt;
 void CFiveDlg::OnStart() 
 {
 	
-	POINT pt;
+	AI_POINT pt;
 	INT64 i64Score;
 	BYTE array[15][15] = {0};
 
@@ -377,7 +377,7 @@ void CFiveDlg::OnStart()
 
 
 	i64Score = 0;
-	pt = AI(array, BLACK_CHESS, 3, &i64Score);
+	pt = AI(array, BLACK_CHESS, 3, &i64Score, 0);
 	ClearLevelScore();
 
 	CString str2;
@@ -471,13 +471,13 @@ void CFiveDlg::OnBnClickedButton2()
 
 void TestCase1()
 {
-	POINT pt;
+	AI_POINT pt={0,0};
 	INT64 i64Score;
 	CString str;
 	UINT32 uiStart;
 	UINT32 uiEnd;
 	BYTE array[15][15]=
-	{	        /*  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14   */	
+	{	    /*  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14   */	
 		/*0 */  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		/*1 */  0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		/*2 */  0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0,
@@ -497,31 +497,31 @@ void TestCase1()
 	};
 	i64Score = 0;
 	uiStart = GetTickCount();
-	pt = AI(array, BLACK_CHESS, 3, &i64Score);
+	//pt = AI(array, BLACK_CHESS, 3, &i64Score, 0);
 	uiEnd = GetTickCount();
 	ClearLevelScore();
-	ASSERT(pt.x == 5 && pt.y == 5);
+	//ASSERT(pt.x == 5 && pt.y == 5);
 
 	str.Format("TestCase1:总共耗时(%u(ms))  位置（x:%u,y:%u） 得分:%d\n", uiEnd - uiStart, pt.x, pt.y, i64Score);
 	OutputDebugString(str);
 
 	i64Score = 0;
 	uiStart = GetTickCount();
-	pt = AI(array, BLACK_CHESS, 2, &i64Score);
+	//pt = AI(array, BLACK_CHESS, 2, &i64Score, 0);
 	uiEnd = GetTickCount();
-	ClearLevelScore();
-	ASSERT(pt.x == 5 && pt.y == 5);
+	//ClearLevelScore();
+	//ASSERT(pt.x == 5 && pt.y == 5);
 	str.Format("TestCase1:总共耗时(%u(ms))  位置（x:%u,y:%u） 得分:%d\n", uiEnd - uiStart, pt.x, pt.y, i64Score);
 	OutputDebugString(str);
 
 	i64Score = 0;
 	uiStart = GetTickCount();
-	pt = AI(array, BLACK_CHESS, 1, &i64Score);
+	pt = AI(array, BLACK_CHESS, 9, &i64Score, 0);
 	uiEnd = GetTickCount();
 	ClearLevelScore();
 	
 
-	ASSERT(pt.x == 5 && pt.y == 5);
+	//ASSERT(pt.x == 5 && pt.y == 5);
 	str.Format("TestCase1:总共耗时(%u(ms))  位置（x:%u,y:%u） 得分:%d\n", uiEnd - uiStart, pt.x, pt.y, i64Score);
 	OutputDebugString(str);
 }
@@ -529,7 +529,7 @@ void TestCase1()
 
 void TestCase2()
 {
-	POINT pt;
+	AI_POINT pt;
 	INT64 i64Score;
 	CString str;
 	UINT32 uiStart;
@@ -555,7 +555,7 @@ void TestCase2()
 	};
 	i64Score = 0;
 	uiStart = GetTickCount();
-	pt = AI(array, BLACK_CHESS, 3, &i64Score);
+	pt = AI(array, BLACK_CHESS, 3, &i64Score, 0);
 	uiEnd = GetTickCount();
 	ClearLevelScore();
 	ASSERT(pt.x == 5 && pt.y == 5);
@@ -566,6 +566,6 @@ void TestCase2()
 
 void TestSuit()
 {
-	//TestCase1();
-	TestCase2();
+	TestCase1();
+	//TestCase2();
 }
