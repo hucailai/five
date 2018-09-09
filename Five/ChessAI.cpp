@@ -1066,13 +1066,26 @@ VOID Candidate2(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], list<AI_POINT > *p
 					}
 
 					AI_POINT pt = {m,n};
-					pCandidate->push_back(pt);
+					
 					temp.insert(pair<LONG, LONG>((m<<16)+n, 0));
-
-					// Ö»È¡5¸ö
-					if (pCandidate->size() < 5)
+					
+					pt.score = GetPointScore(abChessArray, uiColor, m, n);
+					if (uiColor == WHITE_CHESS)
 					{
-						return;
+						pt.score = -pt.score;
+					}
+
+					if (pCandidate->size() < MAX_CANDIDATE || pCandidate->back().score < pt.score)
+					{
+						list<AI_POINT>::iterator it;
+						for (it = pCandidate->begin(); it != pCandidate->end(); ++it)
+						{
+							if (it->score < pt.score)
+							{
+								break;
+							}
+						}
+						pCandidate->insert(it, 1, pt);
 					}
 				}
 			}
@@ -1081,7 +1094,7 @@ VOID Candidate2(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], list<AI_POINT > *p
 
 	if (pCandidate->size() == 0)
 	{
-		AI_POINT pt = {7,7};
+		AI_POINT pt = {7,7,0};
 		pCandidate->push_back(pt);
 	}
 }
@@ -1121,14 +1134,8 @@ AI_POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32
 		for (list<AI_POINT>::iterator it = candidate.begin(); it != candidate.end(); ++it)
 		{
 			p = *it;
-			pointScore = uiBase;
-			pointScore += GetPointScore(abChessArray, uiColor, p.x, p.y);
-			if (uiColor == WHITE_CHESS)
-			{
-				pointScore =-pointScore;
-			}
-
-			iScoreTemp = pointScore;
+			iScoreTemp = uiBase;
+			iScoreTemp += p.score;
 
 			if (iScoreTemp > g_aui64LevelScore[uiLevel] && -CUT_SCORE != g_aui64LevelScore[uiLevel])
 			{
@@ -1164,10 +1171,9 @@ AI_POINT AI(BYTE abChessArray[WIDTH_COUNT][HEIGHT_COUNT], UINT32 uiColor, UINT32
 				*pScore = -CUT_SCORE;
 				return stMaxPnt;
 			}
-			pointScore = GetPointScore(abChessArray, uiColor, p.x, p.y);
 
 			abChessArray[p.x][p.y] = uiColor;
-			AI(abChessArray, COLOR_INVERT(uiColor), uiLevel - 1, &iScoreTemp, pointScore+uiBase);
+			AI(abChessArray, COLOR_INVERT(uiColor), uiLevel - 1, &iScoreTemp, -(p.score+uiBase));
 			abChessArray[p.x][p.y] = NO_CHESS;
 
 			if (iScoreTemp > g_aui64LevelScore[uiLevel] && -CUT_SCORE != g_aui64LevelScore[uiLevel])

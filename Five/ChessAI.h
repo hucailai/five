@@ -40,7 +40,7 @@ typedef struct stAI_POINT
 
 // 得分相关指标
 #define FIVE_SCORE		F_INFINITE		 // 五子得分
-#define FOUR_SCORE		1000000			 // 四子得分
+#define FOUR_SCORE		5000			 // 四子得分
 #define THREE_SCORE     1000			 // 三子得分
 #define TWO_SCORE		100			     // 两子得分
 #define ONE_SCORE		1				 // 单子得分
@@ -49,6 +49,8 @@ typedef struct stAI_POINT
 #define D_THREE_SCORE   F_INFINITE 		 // 双三得分
 
 #define MAX_LEVEL 20  // 最大搜索深度
+
+#define MAX_CANDIDATE  20 // 最大候选节点个数
 
 
 #define FIVECELL_MAX	 3*3*3*3*3
